@@ -4,8 +4,9 @@ library(tidygraph)
 library(ggraph)
 library(circlize)
 
-#Read in phewas results and collapse similar traits according to phecode
-df <- read_csv("phe10.csv") %>% 
+#This script was used to generate the chord diagram to interpret shared MAVs between BioVU phewas phenotypes.
+
+df <- read_csv("PheWAS File") %>% 
   mutate(phenotype_simple = case_when(
     str_detect(JD_STRING,"Type")~"T1D",
     str_detect(JD_STRING,"Pso")~"Psoriasis",
@@ -18,16 +19,12 @@ df <- read_csv("phe10.csv") %>%
   rename(source = SNP, destination = JD_STRING) %>% 
   group_by(destination) %>% 
   distinct(source, .keep_all = T)
-
 netwk <- full_join(df, df, c('source' = 'source')) %>%
   group_by(destination.x, destination.y) %>% summarise(freq = n())  %>% 
   filter( destination.x != destination.y) 
-  
 netwk <- unique(as.data.frame(t(apply(netwk, 1, sort )))) %>% 
   select(,2:3)
-
 chordDiagram(netwk,  annotationTrack = c("name", "grid"),transparency = .3, link.lwd = 1, link.lty = 2, link.border = "black",annotationTrackHeight = c(0.03, 0.05))
-
 circos.clear()
 
 
