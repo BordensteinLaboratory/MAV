@@ -3,12 +3,12 @@ library(Qtlizer)
 library(data.table)
 library(RColorBrewer)
 
+#This SNP data is based on the SNPSNAP (https://data.broadinstitute.org/mpg/snpsnap/) data of matched input SNPS (780 out of 908 submitted SNPS and 200 sets of the total matched datasets)
 
-mla_matched<- fread("matched_snps.txt") %>% 
-  select(1:202)
+mla_matched<- fread(SNPSNAP DATA) %>% 
+  select(1:201)
 snp_list <- mla_matched$Input_SNP
 snp_list <-paste("hg19:",snp_list, sep = "")
-
 df_mav <- get_qtls(snp_list) %>% 
   filter(str_detect(source,"GTE")) %>% 
   filter(sign_info == "FDR<5%" ) %>%
@@ -18,16 +18,6 @@ df_mav <- get_qtls(snp_list) %>%
   group_by(tissue) %>% 
   distinct(SNP)%>% 
   tally()
-
-df_mav_deepdive <- get_qtls(snp_list) %>% 
-  filter(str_detect(source,"GTE")) %>% 
-  filter(sign_info == "FDR<5%" ) %>%
-  rename( SNP = query_term) %>% 
-  separate(tissue, into = cbind("tissue", "other"), sep= "-") 
-
-significant_tissues_qtl <- df_mav_deepdive%>% 
-  filter(tissue %in% c("Whole blood","Skin ","Adipose ","Pancreas","Esophagus ","Artery ","Lung","Nerve ","Testis","Spleen","Thyroid","Colon ","Pituitary","Heart ","Muscle skeletal")) 
-
 
 ####Simulation and testing of matched sets 
 n <- 200
@@ -58,13 +48,13 @@ all <- full_join(done_background,df_mav) %>%
   rename(mav_freq = n)
 all[is.na(all)] <- 0
 
-#compute z-score and one-sided probability. FDR correct across tissues. 
+#Compute z-score and one-sided probability. FDR correct across tissues. 
 all_z<- all%>% 
   mutate(z = (mav_freq-mean)/(sd)) %>% 
   mutate(pval = pnorm(z,lower.tail = F))
 fdr <- as.data.frame(p.adjust(all_z$pval, method = "fdr"))
 final <- cbind(all_z,fdr) %>% 
-  mutate( sig = ifelse( fdr < 0.051,"yes", "no"))
+  mutate( sig = ifelse( fdr < 0.05,"yes", "no"))
 
 #Plot 
 ggplot(final, aes(x = reorder(tissue,-mav_freq), y = mav_freq, fill= sig)) +
