@@ -24,8 +24,9 @@ ea_biovu <-  rownames_to_column(done, var = "snpID")%>%
 ea_done <- ea_biovu %>%
   filter(adj_p_fdr < 0.05)
   
+#PheWAS summary statistics resulting from this is at FDR < 0.80 is available on FigShare 
 
-# Manhattan Plotting is performed by first cleaning data and then adding OR direction to determine if OR is increased or decreased. 
+# Manhattan Plotting is performed by first cleaning data and then adding OR direction to determine if OR is increased or decreased. If recreating the total plot as it appears in the figure, use FDR <0.80 to populate the non-significant results. 
 df <-  ea_done %>% 
   rename(phenotype = CATEGORY_STRING, unadj_p = p,p = adj_p_fdr,OR=OddsRatio) %>%
   type_convert() %>%

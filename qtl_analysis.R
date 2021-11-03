@@ -3,7 +3,7 @@ library(Qtlizer)
 library(data.table)
 library(RColorBrewer)
 
-#This SNP data is based on the SNPSNAP (https://data.broadinstitute.org/mpg/snpsnap/) data of matched input SNPS (780 out of 908 submitted SNPS and 200 sets of the total matched datasets)
+#This SNP data is based on the SNPSNAP (https://data.broadinstitute.org/mpg/snpsnap/) data of matched input SNPS (780 out of 908 submitted SNPS and 200 sets of the total matched datasets). It can be found on FigShare as "SNPSNAP_MATCHED_SNPS.csv". 
 
 mla_matched<- fread(SNPSNAP DATA) %>% 
   select(1:201)
@@ -38,6 +38,7 @@ df <- get_qtls(snp_list) %>%
 names(df)[2] <- paste(setchoice, sep="")
 counts[[i]] <- df
 }
+
 done <- reduce(counts,full_join) 
 done[is.na(done)] <- 0
 done_background <- done %>% 
@@ -48,7 +49,7 @@ all <- full_join(done_background,df_mav) %>%
   rename(mav_freq = n)
 all[is.na(all)] <- 0
 
-#Compute z-score and one-sided probability. FDR correct across tissues. 
+#Compute z-score and one-sided probability. FDR correct across tissue pvals. 
 all_z<- all%>% 
   mutate(z = (mav_freq-mean)/(sd)) %>% 
   mutate(pval = pnorm(z,lower.tail = F))
@@ -56,7 +57,7 @@ fdr <- as.data.frame(p.adjust(all_z$pval, method = "fdr"))
 final <- cbind(all_z,fdr) %>% 
   mutate( sig = ifelse( fdr < 0.05,"yes", "no"))
 
-#Plot 
+#Plot frequency of MAV and simulated tissue frequency among significant tissues in group barplot
 ggplot(final, aes(x = reorder(tissue,-mav_freq), y = mav_freq, fill= sig)) +
   geom_bar(stat="identity", width=.91) + 
   scale_fill_manual(values = c("ivory4", "indianred3")) +
