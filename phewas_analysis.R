@@ -29,12 +29,10 @@ ea_done <- ea_biovu %>%
 # Manhattan Plotting is performed by first cleaning data and then adding OR direction to determine if OR is increased or decreased. If recreating the total plot as it appears in the figure, use FDR <0.80 to populate the non-significant results. 
 df <-  ea_done %>% 
   rename(phenotype = CATEGORY_STRING, unadj_p = p,p = adj_p_fdr,OR=OddsRatio) %>%
-  type_convert() %>%
-  filter (phenotype!= "NULL") %>% 
-  mutate(OR.direction =case_when( OR >1 ~ "Positive", OR < 1 ~"Negative")) %>% 
-  group_by(phenotype) 
+  type_convert()
+
 PheWAS<- ggplot(df, aes(x = str_to_title(phenotype), y = -log(p,10)))+
-  geom_point(aes(fill = phenotype, shape = OR.direction),size =5,position = "jitter")+
+  geom_point(aes(fill = phenotype), size =5,position = "jitter")+
   scale_shape_manual(values = c(21, 21))+
   theme_classic() +
   scale_colour_manual()+
